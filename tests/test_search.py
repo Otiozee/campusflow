@@ -142,6 +142,22 @@ class TestSearch(unittest.TestCase):
         self.assertTrue(validate_search_input("priority", "critical"))
         self.assertFalse(validate_search_input("priority", "Invalid"))
 
+    def test_search_with_special_characters(self):
+        """Search handles special characters in titles"""
+        tickets = []
+        create_ticket(tickets, "Wi-Fi (5GHz) not working", "Network", "high", 15)
+        create_ticket(tickets, "Ethernet cable broken", "Hardware", "low", 2)
+    
+        # Search for "5GHz" should find the first ticket
+        results = search_tickets(tickets, title="5GHz")
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]["id"], "T001")
+        
+        # Search for "wi-fi" should be case-insensitive
+        results = search_tickets(tickets, title="wi-fi")
+        self.assertEqual(len(results), 1)
+
+
 
 if __name__ == "__main__":
     unittest.main()
