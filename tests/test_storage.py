@@ -1,8 +1,11 @@
 import unittest
 import tempfile
 import os
-from campusflow.storage import save_tickets, load_tickets
-from campusflow.tickets import create_ticket
+import json
+from campusflownext.storage import save_tickets, load_tickets, next_ticket_id
+from campusflownext.tickets import create_ticket
+from campusflownext.notes import add_note
+
 
 class TestStorage(unittest.TestCase):
     
@@ -43,6 +46,75 @@ class TestStorage(unittest.TestCase):
         with self.assertRaises(ValueError):
             load_tickets(self.filename)
     
+    def test_load_duplicate_ids_rejected(self):
+        """Duplicate ticket IDs rejected"""
+        tickets = [
+            {
+                "id": "T001",
+                "title": "First",
+                "category": "Network",
+                "urgency": "high",
+                "affected_users": 15,
+                "priority": "critical",
+                "status": "open",
+                "assigned_to": None,
+                "notes": []
+            },
+            {
+                "id": "T001",  # Duplicate!
+                "title": "Second",
+                "category": "Network",
+                "urgency": "low",
+                "affected_users": 1,
+                "priority": "low",
+                "status": "open",
+                "assigned_to": None,
+                "notes": []
+            }
+        ]
+        
+        with open(self.filename, "w") as f:
+            json.dump(tickets, f)
+        
+        with self.assertRaises(ValueError):
+            load_tickets(self.filename)
+    
+    def test_load_invalid_ticket_rejected(self):
+        """Invalid ticket data rejected"""
+        tickets = [
+            {
+                "id": "T001",
+                "title": "First",
+                # missing category
+                "urgency": "high",
+                "affected_users": 15,
+                "priority": "critical",
+                "status": "open",
+                "assigned_to": None,
+                "notes": []
+            }
+        ]
+        
+        with open(self.filename, "w") as f:
+            json.dump(tickets, f)
+        
+        with self.assertRaises(ValueError):
+            load_tickets(self.filename)
+    
+    def test_save_and_load_preserves_notes(self):
+        """Notes preserved through save and load"""
+        tickets = []
+        create_ticket(tickets, "Wi-Fi down", "Network", "high", 15)
+        add_note(tickets, "T001", "Mentor A", "First note here")
+        add_note(tickets, "T001", "Mentor B", "Second note here")
+        
+        save_tickets(tickets, self.filename)
+        loaded = load_tickets(self.filename)
+        
+        self.assertEqual(len(loaded[0]["notes"]), 2)
+        self.assertEqual(loaded[0]["notes"][0]["note_id"], "N001")
+        self.assertEqual(loaded[0]["notes"][1]["note_id"], "N002")
+    
     def test_unique_ids_after_reload(self):
         """IDs remain unique after save and reload"""
         tickets = []
@@ -58,6 +130,54 @@ class TestStorage(unittest.TestCase):
         ids = [t["id"] for t in loaded]
         self.assertEqual(len(ids), len(set(ids)), "IDs should be unique")
         self.assertEqual(loaded[2]["id"], "T003")
+    
+    def test_next_ticket_id_empty(self):
+        """Next ticket ID for empty list is T001"""
+        result = next_ticket_id([])
+        self.assertEqual(result, "T001")
+    
+    def test_next_ticket_id_after_reload(self):
+        """Next ticket ID continues after reload"""
+        tickets = []
+        create_ticket(tickets, "First", "Network", "high", 15)
+        create_ticket(tickets, "Second", "Network", "low", 1)
+        
+        save_tickets(tickets, self.filename)
+        loaded = load_tickets(self.filename)
+        
+        result = next_ticket_id(loaded)
+        self.assertEqual(result, "T003")
+    
+    def test_next_ticket_id_with_gaps(self):
+        """Next ticket ID handles gaps in sequence"""
+        tickets = [
+            {
+                "id": "T001",
+                "title": "First",
+                "category": "Network",
+                "urgency": "high",
+                "affected_users": 15,
+                "priority": "critical",
+                "status": "open",
+                "assigned_to": None,
+                "notes": []
+            },
+            {
+                "id": "T005",  # Gap!
+                "title": "Second",
+                "category": "Network",
+                "urgency": "low",
+                "affected_users": 1,
+                "priority": "low",
+                "status": "open",
+                "assigned_to": None,
+                "notes": []
+            }
+        ]
+        
+        result = next_ticket_id(tickets)
+        self.assertEqual(result, "T006")
+
 
 if __name__ == "__main__":
     unittest.main()
