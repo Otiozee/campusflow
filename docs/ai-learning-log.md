@@ -113,6 +113,7 @@ else:
     print("Valid number:", num)
 finally:
     print("This always runs")
+```
 
 # Output: "That's not a number!" then "This always runs"
 
@@ -157,11 +158,13 @@ Use key parameter with a function
 Return a tuple for multiple sort criteria
 
 My experiment:
+```
 tickets = [
     {"id": "T002", "priority": "high"},
     {"id": "T001", "priority": "critical"},
     {"id": "T003", "priority": "high"}
 ]
+```
 
 priority_order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
 
@@ -175,4 +178,81 @@ Verification: Ran it, got correct order
 Decision: ACCEPTED — using this for work queue
 Related file: campusflow/reports.py
 What I can now explain: sorted() with key function can sort by multiple criteria using tuples.
+
+---
+
+## Fellow: Zedick Otokpa
+
+### Interaction #1 — Validate Before Mutate
+
+**Problem:** I need to validate a dictionary BEFORE changing it, so failed operations don't corrupt data
+
+**My initial understanding:** I thought checking inputs one by one was enough
+
+**Prompt to AI:** "Explain how to validate a dictionary BEFORE mutating it, using a book library example, then quiz me."
+
+**Useful AI guidance:** 
+- Validate ALL inputs first, collect errors
+- Only mutate if everything passes
+- Use a copy for validation if needed
+
+**My experiment:**
+```python
+# Before (bad - mutates then validates)
+def add_book_bad(library, book):
+    library.append(book)  # Mutates first!
+    if not book.get("title"):
+        library.pop()  # Too late, already changed
+
+# After (good - validates first)
+def add_book_good(library, book):
+    if not book.get("title"):
+        raise ValueError("Title required")
+    if not book.get("author"):
+        raise ValueError("Author required")
+    library.append(book)  # Only mutate if valid
+```
+
+Verification: Ran both, confirmed good version doesn't change list on error
+Decision: ACCEPTED — validate everything before any mutation
+Related file: campusflow/validation.py
+What I can now explain: Validate all inputs first, only mutate if everything passes.
+
+### Interaction #2 — JSON Validation After Decoding
+Problem: json.load() succeeds but returns unsafe data
+My initial understanding: I thought if json.load() works, the data is fine
+Prompt to AI: "Why might json.load succeed but return unsafe or inconsistent business data?"
+Useful AI guidance:
+
+JSON just checks syntax, not business rules
+Could have duplicate IDs, missing fields, wrong types
+Need to validate structure AFTER decoding
+
+My experiment:
+```
+import json
+
+# This JSON is syntactically valid but business-invalid
+bad_data = '''
+[
+    {"id": "T001", "title": "First"},
+    {"id": "T001", "title": "Duplicate!"}
+]
+'''
+
+tickets = json.loads(bad_data)  # This succeeds!
+# But we have duplicate IDs - business rule violation
+
+# Need to validate after loading
+ids = [t["id"] for t in tickets]
+if len(ids) != len(set(ids)):
+    raise ValueError("Duplicate ticket IDs found")
+```
+
+Verification: Ran it, confirmed json.load succeeds but data is invalid
+Decision: ACCEPTED - always validate business rules after JSON decode
+Related file: campusflow/storage.py
+What I can now explain: JSON validation is separate from JSON parsing.
+
+---
 
