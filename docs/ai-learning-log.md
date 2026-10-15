@@ -256,3 +256,127 @@ What I can now explain: JSON validation is separate from JSON parsing.
 
 ---
 
+
+## Fellow: Solomon Emmanuel Aleke
+
+### Interaction #1 — casefold vs lower for Search
+
+**Problem:** I need case-insensitive search but wasn't sure if lower() is enough
+
+**My initial understanding:** I thought lower() was sufficient for case-insensitive matching
+
+**Prompt to AI:** "Compare casefold and lower for search; suggest test cases but do not implement my project."
+
+**Useful AI guidance:**
+- casefold() is more aggressive than lower()
+- Handles special characters like German ß
+- For English text, both work the same
+- casefold() is safer for international text
+
+**My experiment:**
+```python
+Verification: Ran it, confirmed casefold handles more edge cases
+
+Decision: ACCEPTED — using casefold() for search
+
+Related file: campusflow/search.py
+
+What I can now explain: casefold() is more aggressive than lower() and handles international characters better.
+
+### Interaction #2 — Combining Multiple Filters
+Problem: I need to combine multiple search filters with AND logic
+
+My initial understanding: I thought I could just chain if statements
+
+Prompt to AI: "How do I combine multiple filter conditions in Python? Should I use AND or OR?"
+
+Useful AI guidance:
+
+Use AND logic when ALL filters must match
+Empty filter means "don't filter by this field"
+Check each filter condition separately
+My experiment:
+
+```
+
+# Sample data
+tickets = [
+    {"title": "Wi-Fi down", "category": "Network", "status": "open"},
+    {"title": "Wi-Fi slow", "category": "Network", "status": "resolved"},
+    {"title": "Laptop broken", "category": "Hardware", "status": "open"}
+]
+
+def search(tickets, title=None, category=None, status=None):
+    results = []
+    for t in tickets:
+        # Check title if provided
+        if title and title.casefold() not in t["title"].casefold():
+            continue
+        # Check category if provided
+        if category and category.casefold() != t["category"].casefold():
+            continue
+        # Check status if provided
+        if status and status.casefold() != t["status"].casefold():
+            continue
+        results.append(t)
+    return results
+
+# Test: search "wifi" + Network + open
+results = search(tickets, "wifi", "Network", "open")
+# Returns only: {"title": "Wi-Fi down", "category": "Network", "status": "open"}
+
+```
+
+Verification: Ran it, got correct AND logic results
+
+Decision: ACCEPTED — using continue statements for AND logic
+
+Related file: campusflow/search.py
+
+What I can now explain: AND logic means each filter must match; use continue to skip non-matching items.
+
+Interaction #3 — Testing CLI Without Manual Input
+Problem: I need to test CLI behavior without typing manually
+
+My initial understanding: I thought I had to run the program and type inputs
+
+Prompt to AI: "How do I test CLI behavior without repeatedly typing manually?"
+
+Useful AI guidance:
+
+Separate business logic from input/output
+Test the logic functions directly
+Use unittest.mock for input/output if needed
+
+My experiment:
+
+```
+
+# Instead of testing the CLI directly, test the logic
+def calculate_score(answers, correct_answers):
+    """Pure function - easy to test"""
+    score = 0
+    for i, answer in enumerate(answers):
+        if answer == correct_answers[i]:
+            score += 1
+    return score
+
+# Test it directly
+assert calculate_score(["A", "B", "C"], ["A", "B", "C"]) == 3
+assert calculate_score(["A", "B", "C"], ["A", "B", "D"]) == 2
+assert calculate_score(["A", "B", "C"], ["D", "D", "D"]) == 0
+
+```
+
+Verification: Ran tests, all passed
+
+Decision: ACCEPTED - separating logic from I/O makes testing easier
+
+Related file: campusflow/understanding_check.py
+
+
+What I can now explain: Pure functions without input/output are much easier to test.
+
+
+
+---
