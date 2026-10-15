@@ -2,7 +2,7 @@ def get_work_queue(tickets):
     """
     Get open tickets sorted by priority (critical > high > medium > low),
     then by numeric ticket ID.
-        
+
     Args:
         tickets: list of tickets
     
@@ -10,14 +10,14 @@ def get_work_queue(tickets):
         Sorted list of open tickets
     """
     priority_order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
-
+    
     open_tickets = [t for t in tickets if t["status"] == "open"]
-
+    
     def sort_key(ticket):
-     # Extract numeric part of ID (T001 → 1)
+        # Extract numeric part of ID (T001 → 1)
         ticket_num = int(ticket["id"][1:])
         return (priority_order[ticket["priority"]], ticket_num)
-
+    
     return sorted(open_tickets, key=sort_key)
 
 
