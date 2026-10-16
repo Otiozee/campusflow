@@ -121,6 +121,34 @@ class TestNotes(unittest.TestCase):
         
         add_note(self.tickets, "T001", "Mentor A", "First note here")
         self.assertEqual(next_note_id(self.ticket), "N002")
+        
+    def test_note_id_does_not_collide_after_reload(self):
+    """Note IDs don't collide after save and reload"""
+    from campusflow.storage import save_tickets, load_tickets
+    import tempfile, os
+   
+    # Create temp file
+    temp_dir = tempfile.mkdtemp()
+    filename = os.path.join(temp_dir, "test.json")
+   
+    # Add notes
+    add_note(self.tickets, "T001", "Mentor A", "First note here")
+    add_note(self.tickets, "T001", "Mentor B", "Second note here")
+   
+    # Save and reload
+    save_tickets(self.tickets, filename)
+    loaded = load_tickets(filename)
+   
+    # Add another note after reload
+    note = add_note(loaded, "T001", "Mentor C", "Third note here")
+   
+    # Should get N003, not N001 again
+    self.assertEqual(note["note_id"], "N003")
+   
+    # Clean up
+    os.remove(filename)
+    os.rmdir(temp_dir)
+
 
 
 if __name__ == "__main__":
