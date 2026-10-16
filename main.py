@@ -26,7 +26,7 @@ def list_tickets(tickets):
         print(f"{t['id']}: {t['title']} [{t['priority']}] ({t['status']})")
 
 def view_ticket(tickets):
-    ticket_id = input("Enter ticket ID: ").strip()
+    ticket_id = input("Enter ticket ID: ").strip().upper()
     for t in tickets:
         if t["id"] == ticket_id:
             print(f"\nID: {t['id']}")
@@ -65,14 +65,14 @@ def main():
                 view_ticket(tickets)
             
             elif choice == "4":
-                ticket_id = input("Ticket ID: ").strip()
+                ticket_id = input("Ticket ID: ").strip().upper()
                 staff = input("Staff name: ").strip()
                 assign_ticket(tickets, ticket_id, staff)
                 save_tickets(tickets)
                 print(f"✓ Assigned {ticket_id} to {staff}")
             
             elif choice == "5":
-                ticket_id = input("Ticket ID: ").strip()
+                ticket_id = input("Ticket ID: ").strip().upper()
                 new_status = input("New status (open/in_progress/resolved): ").strip()
                 change_status(tickets, ticket_id, new_status)
                 save_tickets(tickets)

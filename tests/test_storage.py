@@ -23,7 +23,7 @@ class TestStorage(unittest.TestCase):
     def test_save_and_load(self):
         """Save tickets then load them back"""
         tickets = []
-        create_ticket(tickets, "Wi-Fi down", "Network", "high", 15)
+        create_ticket(tickets, "Wi-Fi down", "Network", "high", 15, )
         create_ticket(tickets, "Laptop broken", "Hardware", "medium", 3)
         
         save_tickets(tickets, self.filename)

@@ -60,12 +60,14 @@ class TestStatusWorkflow(unittest.TestCase):
         self.assertEqual(self.ticket["status"], "open")
     
     def test_invalid_transition(self):
-        """Cannot go from in_progress back to open"""
+        """Cannot go from in_progress back to open, and state stays unchanged."""
         assign_ticket(self.tickets, "T001", "Alice")
         change_status(self.tickets, "T001", "in_progress")
-        
+        before = [dict(ticket) for ticket in self.tickets]
+
         with self.assertRaises(ValueError):
             change_status(self.tickets, "T001", "open")
+        self.assertEqual(self.tickets, before)
 
 
 class TestWorkQueue(unittest.TestCase):

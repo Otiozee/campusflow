@@ -27,7 +27,7 @@ def calculate_priority(urgency, affected_users):
     return "low"
 
 
-def create_ticket(tickets, title, category, urgency, affected_users):
+def create_ticket(tickets, title, category, urgency, affected_users, ):
     """
     Create and validate a new ticket.
     
@@ -73,7 +73,8 @@ def create_ticket(tickets, title, category, urgency, affected_users):
         "affected_users": affected_users,
         "priority": priority,
         "status": "open",
-        "assigned_to": None
+        "assigned_to": None,
+        "notes":[]
     }
     
     tickets.append(ticket)

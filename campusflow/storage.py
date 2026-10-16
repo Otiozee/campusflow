@@ -1,46 +1,45 @@
 import json
 import os
+from .validation import validate_ticket_collection
 
 def save_tickets(tickets, filename="data/tickets.json"):
-    """
-    Save tickets to JSON file.
-    
-    Args:
-        tickets: list of ticket dictionaries
-        filename: path to save file
-    """
-    # Ensure directory exists
-    os.makedirs(os.path.dirname(filename), exist_ok=True)
-    
-    with open(filename, "w") as f:
+
+    validate_ticket_collection(tickets)
+
+    directory = os.path.dirname(filename)
+
+    if directory:
+        os.makedirs(directory, exist_ok=True)
+
+    temporary = filename + ".tmp"
+
+    with open(temporary, "w", encoding="utf-8") as f:
         json.dump(tickets, f, indent=2)
 
+    os.replace(temporary, filename)
 
 def load_tickets(filename="data/tickets.json"):
-    """
-    Load tickets from JSON file.
-    
-    Args:
-        filename: path to load file
-    
-    Returns:
-        List of tickets
-    
-    Raises:
-        ValueError: if file is malformed JSON
-    """
+
     if not os.path.exists(filename):
+
         return []
-    
     try:
-        with open(filename, "r") as f:
+        with open(filename, "r", encoding="utf-8") as f:
             tickets = json.load(f)
+
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"Malformed JSON in {filename}: {exc}") from exc
         
-        # Validate it's a list
-        if not isinstance(tickets, list):
-            raise ValueError("Ticket file must contain a list")
-        
-        return tickets
-    
-    except json.JSONDecodeError as e:
-        raise ValueError(f"Malformed JSON in {filename}: {e}")
+    except UnicodeDecodeError as exc:
+        raise ValueError(f"Saved file {filename} is not valid UTF-8 text") from exc
+
+    # Preserve older CampusFlow records created before notes were introduced.
+    # Only the missing notes field is migrated; all other required fields are
+    # still checked by validate_ticket_collection below.
+    if isinstance(tickets, list):
+        for ticket in tickets:
+            if isinstance(ticket, dict) and "notes" not in ticket:
+                ticket["notes"] = []
+
+    validate_ticket_collection(tickets)
+    return tickets

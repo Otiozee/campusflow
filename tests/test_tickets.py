@@ -76,5 +76,12 @@ class TestTicketCreation(unittest.TestCase):
         with self.assertRaises(ValueError):
             create_ticket(self.tickets, "Test", "Network", "high", True)
 
+    def test_invalid_create_leaves_collection_unchanged(self):
+        """A rejected creation must not append or modify any ticket."""
+        before = [dict(ticket) for ticket in self.tickets]
+        with self.assertRaises(ValueError):
+            create_ticket(self.tickets, "Bad ticket", "Unknown", "high", 5)
+        self.assertEqual(self.tickets, before)
+
 if __name__ == "__main__":
     unittest.main()
